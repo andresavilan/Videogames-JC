@@ -9,7 +9,8 @@ const emojis={'-':' ','O':'🚪','X':'💣','I':'🎁','PLAYER':'💀','BOMB_COL
   -XXXXXXXXX
   -XXXXXXXXX
   OXXXXXXXXX
-`);maps.push(`
+`);
+maps.push(`
   O--XXXXXXX
   X--XXXXXXX
   XX----XXXX
@@ -20,7 +21,8 @@ const emojis={'-':' ','O':'🚪','X':'💣','I':'🎁','PLAYER':'💀','BOMB_COL
   XX--XXX-XX
   XXXX---IXX
   XXXXXXXXXX
-  `);maps.push(`
+  `);
+  maps.push(`
   I-----XXXX
   XXXXX-XXXX
   XX----XXXX
