@@ -4,14 +4,30 @@ const btnUp = document.querySelector('#up')
 const btnLeft = document.querySelector('#left')
 const btnRight = document.querySelector('#right')
 const btnDown = document.querySelector('#down')
+const livesSpan = document.getElementById('lives')
+const spanTime = document.getElementById('time')
 
 let canvasSize;
 let elementSize
 
-let playerPosition = {
+let level = 0;
+let lives= 3;
+
+let timeStart;
+let timePlayer;
+let timeInterval;
+
+const playerPosition = {
     x: undefined,
     y: undefined
 }
+
+const giftPosition = {
+    x: undefined,
+    y: undefined
+}
+
+let enemiesPositions = [];
 
 window.addEventListener('load', setCanvasSize);
 window.addEventListener('resize', setCanvasSize)
@@ -34,10 +50,23 @@ function startGame() {
     game.font = elementSize + 'px Verdana'
     game.textAlign = 'end'
 
-    const map = maps[0];
+    const map = maps[level];
+
+    if(!map) {
+        gameWin();
+        return;
+    }
+
+    if (!timeStart) {
+        timeStart = Date.now();
+        timeInterval = setInterval(showTime,100)
+    }
+
     const mapRows = map.trim().split('\n');
     const mapRowCols = mapRows.map(row => row.trim().split(''));
 
+    showLives()
+    enemiesPositions=[]
     game.clearRect (0,0,canvasSize,canvasSize)
     // for (let row = 1; row <= 10; row++) {
     //     for (let col = 1; col <= 10; col++) {
@@ -55,16 +84,78 @@ function startGame() {
                 if (!playerPosition.x && !playerPosition.y) {
                 playerPosition.x = posX
                 playerPosition.y = posY}
+            } else if (col == 'I') {
+                giftPosition.x = posX
+                giftPosition.y = posY
+            } else if (col == 'X') {
+                enemiesPositions.push({
+                    x:posX,
+                    y:posY
+                })
             }
+
             game.fillText(emoji, posX, posY)
-        })
+        }) 
     })
     movePlayer()
 }
 
-function movePlayer() {
+function movePlayer() {    
+    if(playerPosition.x.toFixed(3) === giftPosition.x.toFixed(3) && playerPosition.y.toFixed(3) === giftPosition.y.toFixed(3) ) {
+       levelWin()
+    } 
+    
+    const enemyCollision = enemiesPositions.find(enemy => {
+        const enemyCollisionX = enemy.x.toFixed(3) == playerPosition.x.toFixed(3)
+        const enemyCollisionY = enemy.y.toFixed(3) == playerPosition.y.toFixed(3)
+        return enemyCollisionX && enemyCollisionY
+    })
+
+    if(enemyCollision) {
+        levelFail()
+    }
+    
     game.fillText (emojis['PLAYER'], playerPosition.x, playerPosition.y)
 }
+
+function levelWin() {
+    console.log('win');
+    level++;
+    startGame()
+}
+
+function levelFail() {
+    lives--;
+
+    if(lives<=0) {
+        level= 0;
+        lives = 3;
+        timeStart = undefined;
+    }
+
+    playerPosition.x = undefined
+    playerPosition.y = undefined
+    console.log(lives);
+    startGame()    
+}
+
+function gameWin() {
+    console.log('Ganaste');
+    clearInterval(timeInterval)
+}
+
+function showLives() {
+    const heartArray = Array(lives).fill(emojis['HEART'])
+    livesSpan.innerHTML = ''
+    heartArray.forEach(heart => livesSpan.append(emojis['HEART']))
+}
+
+function showTime() {   
+    spanTime.innerHTML = Date.now() - timeStart
+}
+
+
+
 
 window.addEventListener('keydown', moveByKeys)
 btnUp.addEventListener('click', moveUp)
