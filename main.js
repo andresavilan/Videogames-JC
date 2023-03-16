@@ -6,15 +6,16 @@ const btnRight = document.querySelector('#right')
 const btnDown = document.querySelector('#down')
 const livesSpan = document.getElementById('lives')
 const spanTime = document.getElementById('time')
+const spanRecord = document.querySelector('#record')
+const pResult = document.querySelector('#result')
 
 let canvasSize;
 let elementSize
 
 let level = 0;
-let lives= 3;
+let lives = 3;
 
 let timeStart;
-let timePlayer;
 let timeInterval;
 
 const playerPosition = {
@@ -31,6 +32,13 @@ let enemiesPositions = [];
 
 window.addEventListener('load', setCanvasSize);
 window.addEventListener('resize', setCanvasSize)
+
+window.addEventListener('keydown', moveByKeys)
+btnUp.addEventListener('click', moveUp)
+btnLeft.addEventListener('click', moveLeft)
+btnRight.addEventListener('click', moveRight)
+btnDown.addEventListener('click', moveDown)
+
 
 function setCanvasSize() {
     if (window.innerWidth < window.innerHeight) {
@@ -52,70 +60,72 @@ function startGame() {
 
     const map = maps[level];
 
-    if(!map) {
+    if (!map) {
         gameWin();
         return;
     }
 
     if (!timeStart) {
         timeStart = Date.now();
-        timeInterval = setInterval(showTime,100)
+        timeInterval = setInterval(showTime, 100);
+        showRecord();
     }
 
     const mapRows = map.trim().split('\n');
     const mapRowCols = mapRows.map(row => row.trim().split(''));
 
     showLives()
-    enemiesPositions=[]
-    game.clearRect (0,0,canvasSize,canvasSize)
+    enemiesPositions = []
+    game.clearRect(0, 0, canvasSize, canvasSize);
     // for (let row = 1; row <= 10; row++) {
     //     for (let col = 1; col <= 10; col++) {
     //         game.fillText(emojis[mapRowCols[col - 1][row - 1]], elementSize * row, elementSize * col)
     //     }
     // }
     //! versión con forEach
-    mapRowCols.forEach ((row, rowI) => {
-        row.forEach((col,colI)=>{
+    mapRowCols.forEach((row, rowI) => {
+        row.forEach((col, colI) => {
             const emoji = emojis[col]
-            const posX = elementSize*(colI + 1);
-            const posY = elementSize*(rowI + 1)
+            const posX = elementSize * (colI + 1);
+            const posY = elementSize * (rowI + 1)
 
-            if (col == 'O') { 
+            if (col == 'O') {
                 if (!playerPosition.x && !playerPosition.y) {
-                playerPosition.x = posX
-                playerPosition.y = posY}
+                    playerPosition.x = posX
+                    playerPosition.y = posY
+                }
             } else if (col == 'I') {
                 giftPosition.x = posX
                 giftPosition.y = posY
             } else if (col == 'X') {
                 enemiesPositions.push({
-                    x:posX,
-                    y:posY
+                    x: posX,
+                    y: posY
                 })
             }
 
             game.fillText(emoji, posX, posY)
-        }) 
+        })
     })
     movePlayer()
 }
 
-function movePlayer() {    
-    if(playerPosition.x.toFixed(3) === giftPosition.x.toFixed(3) && playerPosition.y.toFixed(3) === giftPosition.y.toFixed(3) ) {
-       levelWin()
-    } 
-    
+function movePlayer() {
+    if (playerPosition.x.toFixed(3) === giftPosition.x.toFixed(3) && playerPosition.y.toFixed(3) === giftPosition.y.toFixed(3)) {
+        levelWin()
+    }
+
     const enemyCollision = enemiesPositions.find(enemy => {
         const enemyCollisionX = enemy.x.toFixed(3) == playerPosition.x.toFixed(3)
         const enemyCollisionY = enemy.y.toFixed(3) == playerPosition.y.toFixed(3)
         return enemyCollisionX && enemyCollisionY
     })
 
-    if(enemyCollision) {
+    if (enemyCollision) {
         levelFail()
     }
-    
-    game.fillText (emojis['PLAYER'], playerPosition.x, playerPosition.y)
+
+    game.fillText(emojis['PLAYER'], playerPosition.x, playerPosition.y)
 }
 
 function levelWin() {
@@ -127,8 +137,8 @@ function levelWin() {
 function levelFail() {
     lives--;
 
-    if(lives<=0) {
-        level= 0;
+    if (lives <= 0) {
+        level = 0;
         lives = 3;
         timeStart = undefined;
     }
@@ -136,12 +146,21 @@ function levelFail() {
     playerPosition.x = undefined
     playerPosition.y = undefined
     console.log(lives);
-    startGame()    
+    startGame()
 }
 
 function gameWin() {
-    console.log('Ganaste');
     clearInterval(timeInterval)
+    let timePlayer = Date.now() - timeStart
+    const recordTime = localStorage.getItem('record_time')
+
+    if (!recordTime || timePlayer < recordTime) {
+        localStorage.setItem('record_time', timePlayer)
+        pResult.innerHTML = 'Nuevo Record!'
+    } else { 
+        pResult.innerHTML = 'Felicidades! pero no superaste el record'
+    }
+
 }
 
 function showLives() {
@@ -150,53 +169,48 @@ function showLives() {
     heartArray.forEach(heart => livesSpan.append(emojis['HEART']))
 }
 
-function showTime() {   
+function showTime() {
     spanTime.innerHTML = Date.now() - timeStart
 }
 
-
-
-
-window.addEventListener('keydown', moveByKeys)
-btnUp.addEventListener('click', moveUp)
-btnLeft.addEventListener('click', moveLeft)
-btnRight.addEventListener('click', moveRight)
-btnDown.addEventListener('click', moveDown)
+function showRecord() {
+    spanRecord.innerHTML = localStorage.getItem('record_time')
+}
 
 function moveByKeys(event) {
     switch (event.key) {
         case 'ArrowUp':
-                moveUp()
+            moveUp()
             break;
         case 'ArrowDown':
-                moveDown()
+            moveDown()
             break;
         case 'ArrowLeft':
-                moveLeft()
+            moveLeft()
             break;
         case 'ArrowRight':
-                moveRight()
+            moveRight()
             break;
         default:
             break;
     }
 }
 
-function moveUp () {
+function moveUp() {
     if ((playerPosition.y - elementSize) < elementSize) {
     } else {
         playerPosition.y -= elementSize;
         startGame()
     }
 }
-function moveLeft () {
+function moveLeft() {
     if ((playerPosition.x - elementSize) < elementSize) {
     } else {
         playerPosition.x -= elementSize;
         startGame();
     }
 }
-function moveRight () {
+function moveRight() {
 
     if ((playerPosition.x + elementSize) > canvasSize) {
     } else {
@@ -204,7 +218,7 @@ function moveRight () {
         startGame();
     }
 }
-function moveDown () {
+function moveDown() {
     if ((playerPosition.y + elementSize) > canvasSize) {
     } else {
         playerPosition.y += elementSize;
